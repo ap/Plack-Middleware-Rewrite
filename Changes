@@ -1,5 +1,8 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.002 Fri 18 Feb 2011
+	- Switched to using `response_cb`.
+
 1.001 Thu 17 Feb 2011
 	- Declared depenencies. No functional changes.
 

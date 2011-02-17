@@ -40,12 +40,12 @@ sub call {
 	}
 
 	my $res = $self->app->( $env );
+	return $res if not $modify_cb;
 
-	if ( $modify_cb ) {
-		$modify_cb->( $env ) for Plack::Util::headers( $res->[1] );
-	}
-
-	return $res;
+	Plack::Util::response_cb( $res, sub {
+		$modify_cb->( $env ) for Plack::Util::headers( $_[0][1] );
+		return;
+	} );
 }
 
 1;
