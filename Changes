@@ -1,4 +1,7 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.001 Thu 17 Feb 2011
+	- Declared depenencies. No functional changes.
+
 1.0 Wed 16 Feb 2011
 	- Initial release.
