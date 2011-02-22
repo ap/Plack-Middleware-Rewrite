@@ -93,21 +93,48 @@ almost anything is possible very easily.
 C<rules> takes a reference to a function that will be called on each request.
 When it is, the C<PATH_INFO> is aliased to C<$_>, so that you can easily use
 regexp matches and subtitutions to examine and modify it. The L<PSGI>
-envrionment will be passed as its first and only argument.
+envrionment will be passed as its first and only argument. The function can
+return four (and a half) kinds of values:
 
-This function can return a value that looks like an HTTP status to stop the
-request from being processed further. In that case an empty response with the
-returned status will be sent to the browser. If it is a redirect status, then
-the rewritten C<PATH_INFO> will be used as the redirect destination.
+=over 4
 
-Alternatively it can return an array: a regular L<PSGI> response, except that
-you may omit either or both the headers and body elements. (Empty ones will be
-supplied for you, for convenience.)
+=item Nothing or C<undef>
 
-A third option is to return a reference to a function. This function will
-be called I<after> the request has been processed, with C<$_> aliased to a
-L<Plack::Util>::headers object for the response, for convenient alteration
-of headers. The L<PSGI> environment is, again, passed as its first and only
-argument.
+In that case, any path and query string rewriting will be treated as an
+internal rewrite, invisible to the user. This is just like having
+C<RewriteRule>s that do not redirect.
+
+=item A scalar value that looks like an HTTP status
+
+This will stop the request from being processed further. An empty response with
+the returned status will be sent to the browser. If it is a redirect status,
+then the rewritten C<PATH_INFO> will be used as the redirect destination.
+
+=item An array reference
+
+This is assumed to be a regular L<PSGI> response, except that you may omit
+either or both the headers and body elements. Empty ones will be supplied for
+you, for convenience.
+
+=item A code reference
+
+The function you supply will be called I<after> the request has been processed,
+with C<$_> aliased to a L<C<Plack::Util::headers>|Plack::Util> object for the
+response, for convenient alteration of headers. The L<PSGI> environment is,
+again, passed as its first and only argument.
+
+=item Any other kind of value
+
+Other values are currently treated the same as returning nothing. This may
+change in the future, depending on whether ambiguities crop up in practice.
+If you want to be absolutely certain to avoid ambiguities, return one-element
+arrays instead of plain values, and use an explicit C<return> at the end of
+your rules:
+
+ return [201] if $_ eq '/favicon.ico';
+ s{^/here(?=/|$)}{/there};
+ return;
+
+=back
 
 =back
