@@ -67,6 +67,8 @@ __END__
 
          return 201 if $_ eq '/favicon.ico';
 
+         return 503 if -e '/path/to/app/maintenance.lock';
+
          return [200, [qw(Content-Type text/plain)], ['You found it!']]
             if $_ eq '/easter-egg';
 
