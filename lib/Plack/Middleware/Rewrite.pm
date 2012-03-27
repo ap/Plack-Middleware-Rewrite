@@ -31,8 +31,7 @@ sub call {
 		push @$res, [] if @$res < 3;
 
 		if ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
-			my $req_base = Plack::Request->new( $env )->uri;
-			my $abs_dest = URI->new_abs( $_, $req_base );
+			my $abs_dest = Plack::Request->new( $env )->uri;
 			Plack::Util::header_set( $res->[1], Location => $abs_dest );
 		}
 

@@ -56,6 +56,12 @@ test_psgi app => $app, client => sub {
 	is $res->header( 'Location' ), 'http://localhost/bar/', '... and produce the right Location';
 	ok !$res->content, '... and prevent execution of the wrapped app';
 
+	$req = GET 'http://localhost/foo?q=baz';
+	$res = $cb->( $req );
+	is $res->code, 301, 'Redirects change the status';
+	is $res->header( 'Location' ), 'http://localhost/bar/?q=baz', '... and produce the right Location';
+	ok !$res->content, '... and prevent execution of the wrapped app';
+
 	$req = GET 'http://localhost/die';
 	$res = $cb->( $req );
 	is $res->code, 404, 'Responses can be wholly fabricated';
