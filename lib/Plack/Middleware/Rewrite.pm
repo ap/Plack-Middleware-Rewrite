@@ -98,7 +98,7 @@ almost anything is possible very easily.
 C<rules> takes a reference to a function that will be called on each request.
 When it is, the C<PATH_INFO> is aliased to C<$_>, so that you can easily use
 regexp matches and subtitutions to examine and modify it. The L<PSGI>
-envrionment will be passed as its first and only argument. The function can
+environment will be passed as its first and only argument. The function can
 return four (and a half) kinds of values:
 
 =over 4
