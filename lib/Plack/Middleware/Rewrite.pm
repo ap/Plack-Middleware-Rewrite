@@ -7,7 +7,6 @@ use parent qw( Plack::Middleware );
 use Plack::Util::Accessor qw( rules );
 use Plack::Request ();
 use Plack::Util ();
-use URI ();
 
 sub call {
 	my $self = shift;
