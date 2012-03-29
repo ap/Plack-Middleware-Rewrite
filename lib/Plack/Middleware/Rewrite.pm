@@ -17,29 +17,34 @@ sub call {
 
 	my $modify_cb;
 
-	for ( $env->{'PATH_INFO'} ) {
-		my $res = $self->rules->( $env ) or last;
+	# call rules with $_ aliased to PATH_INFO
+	my ( $res ) = map { $self->rules->( $env ) } $env->{'PATH_INFO'};
 
-		$modify_cb = $res if 'CODE' eq ref $res;
-
-		$res = [ $res ] if not ref $res and $res =~ /\A[1-5][0-9][0-9]\z/;
-
-		last if 'ARRAY' ne ref $res or @$res < 1;
-
+	# return value fixup
+	if ( 'CODE' eq ref $res ) {
+		$modify_cb = $res;
+		undef $res;
+	}
+	elsif ( 'ARRAY' eq ref $res and @$res ) {
 		push @$res, [] if @$res < 2;
 		push @$res, [] if @$res < 3;
-
-		if ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
-			my $abs_dest = Plack::Request->new( $env )->uri;
-			Plack::Util::header_set( $res->[1], Location => $abs_dest );
-		}
-
-		return $res;
+	}
+	elsif ( not ref $res and defined $res and $res =~ /\A[1-5][0-9][0-9]\z/ ) {
+		$res = [ $res, [], [] ];
+	}
+	else {
+		undef $res;
 	}
 
-	my $res = $self->app->( $env );
-	return $res if not $modify_cb;
+	if ( not $res ) { # redirect was internal
+		$res = $self->app->( $env );
+	}
+	elsif ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
+		my $dest = Plack::Request->new( $env )->uri;
+		Plack::Util::header_set( $res->[1], Location => $dest );
+	}
 
+	return $res if not $modify_cb;
 	Plack::Util::response_cb( $res, sub {
 		$modify_cb->( $env ) for Plack::Util::headers( $_[0][1] );
 		return;
