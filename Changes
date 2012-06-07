@@ -1,5 +1,8 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.005 Thu 07 Jun 2012
+	- Preserve pre-existing Location header in fabricated responses
+
 1.004 Thu 29 Mar 2012
 	- Preserve query params in external redirects by dropping unnecessary use of URI
 	  (with thanks to Wallace Reis)

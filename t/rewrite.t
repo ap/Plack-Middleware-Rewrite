@@ -23,6 +23,9 @@ $app = builder {
 		return sub { $_->set( 'Content-Type', $xhtml ) }
 			if $_[0]{'HTTP_ACCEPT'} =~ m{application/xhtml\+xml(?!\s*;\s*q=0)};
 
+		return [ 302, [ Location => 'http://localhost/correct' ], [] ]
+			if m{^/psgi-redirect};
+
 		s{^/baz$}{/quux};
 	};
 	$app;
@@ -67,6 +70,11 @@ test_psgi app => $app, client => sub {
 	is $res->code, 404, 'Responses can be wholly fabricated';
 	is $res->header( 'Content-Type' ), 'text/plain', '... with headers';
 	is $res->content, 'Goodbye Web', '... body, and all.';
+
+	$req = GET 'http://localhost/psgi-redirect';
+	$res = $cb->( $req );
+	is $res->code, 302, 'Fabricated responses can be redirects';
+	is $res->header( 'Location' ), 'http://localhost/correct', '... with proper destination';
 
 	$req = GET 'http://localhost/', Accept => $xhtml;
 	$res = $cb->( $req );

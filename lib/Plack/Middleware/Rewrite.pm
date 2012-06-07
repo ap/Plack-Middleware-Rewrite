@@ -40,8 +40,10 @@ sub call {
 		$res = $self->app->( $env );
 	}
 	elsif ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
-		my $dest = Plack::Request->new( $env )->uri;
-		Plack::Util::header_set( $res->[1], Location => $dest );
+		if ( not Plack::Util::header_exists( $res->[1], 'Location' ) ) {
+			my $dest = Plack::Request->new( $env )->uri;
+			Plack::Util::header_set( $res->[1], Location => $dest );
+		}
 	}
 
 	return $res if not $modify_cb;
