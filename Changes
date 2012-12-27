@@ -1,5 +1,8 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.006 Thu 27 Dec 2012
+	- Fixed buggy interaction with streaming
+
 1.005 Thu 07 Jun 2012
 	- Preserve pre-existing Location header in fabricated responses
 

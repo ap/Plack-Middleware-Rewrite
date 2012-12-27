@@ -12,9 +12,6 @@ sub call {
 	my $self = shift;
 	my ( $env ) = @_;
 
-	local $env->{'QUERY_STRING'} = $env->{'QUERY_STRING'};
-	local $env->{'PATH_INFO'}    = $env->{'PATH_INFO'};
-
 	my $modify_cb;
 
 	# call rules with $_ aliased to PATH_INFO
