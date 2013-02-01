@@ -26,6 +26,8 @@ $app = builder {
 		return [ 302, [ Location => 'http://localhost/correct' ], [] ]
 			if m{^/psgi-redirect};
 
+                return 304 if /not-modified/;
+
 		s{^/baz$}{/quux};
 	};
 	$app;
@@ -57,13 +59,20 @@ test_psgi app => $app, client => sub {
 	$res = $cb->( $req );
 	is $res->code, 301, 'Redirects change the status';
 	is $res->header( 'Location' ), 'http://localhost/bar/', '... and produce the right Location';
-	ok !$res->content, '... and prevent execution of the wrapped app';
+	like $res->content, qr{this\s+item\s+has\s+moved}i,
+          '... and prevent execution of the wrapped app';
+
+        $req = GET 'http://localhost/not-modified';
+        $res = $cb->( $req );
+        is $res->code, 304, 'Redirects change the status';
+        ok !$res->content, '... no body for 304 response';
 
 	$req = GET 'http://localhost/foo?q=baz';
 	$res = $cb->( $req );
 	is $res->code, 301, 'Redirects change the status';
 	is $res->header( 'Location' ), 'http://localhost/bar/?q=baz', '... and produce the right Location';
-	ok !$res->content, '... and prevent execution of the wrapped app';
+	like $res->content, qr{this\s+item\s+has\s+moved}i,
+          '... and prevent execution of the wrapped app';
 
 	$req = GET 'http://localhost/die';
 	$res = $cb->( $req );
