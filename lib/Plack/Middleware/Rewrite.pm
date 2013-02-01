@@ -41,6 +41,21 @@ sub call {
 			my $dest = Plack::Request->new( $env )->uri;
 			Plack::Util::header_set( $res->[1], Location => $dest );
 		}
+                if ($res->[0] != 304 && !Plack::Util::content_length($res->[2])) {
+                  my $location = Plack::Util::header_get($res->[1], 'Location');
+                  my $body = <<"EOF";
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Moved</title>
+  </head>
+  <body>
+     <p>This item has moved <a href="$location">here</a>.</p>
+  </body>
+</html>
+EOF
+                  $res->[2] = [$body];
+                }
 	}
 
 	return $res if not $modify_cb;
