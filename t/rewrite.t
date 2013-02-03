@@ -5,7 +5,8 @@ use Plack::Builder;
 use Test::More;
 use HTTP::Request::Common;
 
-my $app = sub { return [ 200, [ 'Content-Type' => 'text/plain' ], [ $_[0]{'PATH_INFO'} ] ] };
+my $did_run;
+my $app = sub { $did_run = 1; [ 200, [ 'Content-Type' => 'text/plain' ], [ $_[0]{'PATH_INFO'} ] ] };
 
 my $xhtml = 'application/xhtml+xml';
 
@@ -26,6 +27,12 @@ $app = builder {
 		return [ 302, [ Location => 'http://localhost/correct' ], [] ]
 			if m{^/psgi-redirect};
 
+		return [ 302, [ qw( Content-Length 0 ) ], [] ]
+			if s{^/nobody/?$}{/somebody/};
+
+		return 303
+			if s{^/fate/?$}{/tempted&badly/};
+
 		s{^/baz$}{/quux};
 	};
 	$app;
@@ -36,55 +43,72 @@ test_psgi app => $app, client => sub {
 
 	my ( $req, $res );
 
+	my $run = sub { $did_run = 0; goto &$cb };
+
 	$req = GET 'http://localhost/';
-	$res = $cb->( $req );
-	is $res->code, 200, 'Pass-through leaves status alone';
-	is $res->content, '/', '... and the body';
-	is $res->header( 'Content-Type' ), 'text/plain', '... as well as existing headers';
+	$res = $run->( $req );
+	is $did_run, 1, 'Pass-through works';
+	is $res->code, 200, '... and leaves status alone';
+	is $res->content, '/', '... as well as the the body';
+	is $res->header( 'Content-Type' ), 'text/plain', '... and existing headers';
 	ok !$res->header( 'Location' ), '... without adding any';
 
 	$req = GET 'http://localhost/favicon.ico';
-	$res = $cb->( $req );
-	is $res->code, 201, 'Intercepts change the status';
-	ok !$res->content, '... and prevent execution of the wrapped app';
+	$res = $run->( $req );
+	is $did_run, 0, 'Intercepts prevent execution of the wrapped app';
 
 	$req = GET 'http://localhost/baz';
-	$res = $cb->( $req );
+	$res = $run->( $req );
 	is $res->content, '/quux', 'Internal rewrites affect the wrapped app';
 	ok !$res->header( 'Location' ), '... without redirecting';
 
+	{ my $t = 'http://localhost/bar/';
 	$req = GET 'http://localhost/foo';
-	$res = $cb->( $req );
-	is $res->code, 301, 'Redirects change the status';
-	is $res->header( 'Location' ), 'http://localhost/bar/', '... and produce the right Location';
-	ok !$res->content, '... and prevent execution of the wrapped app';
+	$res = $run->( $req );
+	is $did_run, 0, 'Redirects prevent execution of the wrapped app';
+	is $res->code, 301, '... and change the status';
+	is $res->header( 'Location' ), $t, '... and produce the right Location';
+	is $res->header( 'Content-Type' ), 'text/html', '... with a proper Content-Type';
+	like $res->content, qr!<a href="\Q$t\E">!, '... for the stub body';
+	}
+
+	$req = GET 'http://localhost/fate';
+	$res = $run->( $req );
+	like $res->content, qr!<a href="http://localhost/tempted&amp;badly/">!, '... which is XSS-safe';
+
+	$req = GET 'http://localhost/favicon.ico';
+	$res = $run->( $req );
+	is $res->code, 201, 'Body-less statuses are recognized';
+	ok !$res->content, '... and no body generated for them';
 
 	$req = GET 'http://localhost/foo?q=baz';
-	$res = $cb->( $req );
-	is $res->code, 301, 'Redirects change the status';
-	is $res->header( 'Location' ), 'http://localhost/bar/?q=baz', '... and produce the right Location';
-	ok !$res->content, '... and prevent execution of the wrapped app';
+	$res = $run->( $req );
+	is $res->header( 'Location' ), 'http://localhost/bar/?q=baz', 'Query strings are untouched';
 
 	$req = GET 'http://localhost/die';
-	$res = $cb->( $req );
+	$res = $run->( $req );
 	is $res->code, 404, 'Responses can be wholly fabricated';
 	is $res->header( 'Content-Type' ), 'text/plain', '... with headers';
 	is $res->content, 'Goodbye Web', '... body, and all.';
 
 	$req = GET 'http://localhost/psgi-redirect';
-	$res = $cb->( $req );
+	$res = $run->( $req );
 	is $res->code, 302, 'Fabricated responses can be redirects';
 	is $res->header( 'Location' ), 'http://localhost/correct', '... with proper destination';
 
+	$req = GET 'http://localhost/nobody';
+	$res = $run->( $req );
+	ok !$res->content, '... and can eschew the auto-generated body';
+
 	$req = GET 'http://localhost/', Accept => $xhtml;
-	$res = $cb->( $req );
+	$res = $run->( $req );
 	is $res->code, 200, 'Post-modification leaves the status alone';
 	is $res->content, '/', '... and the body';
 	ok !$res->header( 'Location' ), '... and inserts no Location header';
 	is $res->header( 'Content-Type' ), $xhtml, '... but affects the desired headers';
 
 	$req = GET 'http://localhost/', Accept => "$xhtml;q=0";
-	$res = $cb->( $req );
+	$res = $run->( $req );
 	is $res->header( 'Content-Type' ), 'text/plain', '... and triggers only as requested';
 };
 
