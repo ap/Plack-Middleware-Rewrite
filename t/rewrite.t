@@ -112,4 +112,13 @@ test_psgi app => $app, client => sub {
 	is $res->header( 'Content-Type' ), 'text/plain', '... and triggers only as requested';
 };
 
+test_psgi app => builder {
+	enable 'Rewrite', rules => sub {};
+	sub { [ 301, [ qw( Location http://localhost/ ) ], [] ] };
+}, client => sub {
+	my $cb = shift;
+	my $res = $cb->( GET 'http://localhost/' );
+	ok !$res->content, 'Redirects from the wrapped app are passed through untouched';
+};
+
 done_testing;
