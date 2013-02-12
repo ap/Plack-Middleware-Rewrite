@@ -1,5 +1,8 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.007 Tue 12 Feb 2013
+	- Include a body in middleware-generated redirect responses
+
 1.006 Thu 27 Dec 2012
 	- Fixed buggy interaction with streaming
 
