@@ -1,5 +1,8 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.008 Fri 28 Feb 2014
+	- Fix XSS test
+
 1.007 Tue 12 Feb 2013
 	- Include a body in middleware-generated redirect responses
 

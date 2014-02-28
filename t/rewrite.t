@@ -31,7 +31,7 @@ $app = builder {
 			if s{^/nobody/?$}{/somebody/};
 
 		return 303
-			if s{^/fate/?$}{/tempted&badly/};
+			if s{^/fate/?$}{/tempted<'&">badly/};
 
 		s{^/baz$}{/quux};
 	};
@@ -74,7 +74,7 @@ test_psgi app => $app, client => sub {
 
 	$req = GET 'http://localhost/fate';
 	$res = $run->( $req );
-	like $res->content, qr!<a href="http://localhost/tempted&amp;badly/">!, '... which is XSS-safe';
+	like $res->content, qr!<a href="http://localhost/tempted(?i:(?:&lt;|%3c)(?:&#39;|%27)(?:&amp;|%26)(?:&quot;|%22)(?:&gt;|%3e))badly/">!, '... which is XSS-safe';
 
 	$req = GET 'http://localhost/favicon.ico';
 	$res = $run->( $req );
