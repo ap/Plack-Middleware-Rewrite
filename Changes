@@ -1,5 +1,7 @@
 Revision history for Plack-Middleware-Rewrite
 
+      Document explictly how to redirect to a different host (OALDERS).
+
 1.008 Fri 28 Feb 2014
 	- Fix XSS test
 

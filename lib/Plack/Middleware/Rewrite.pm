@@ -84,7 +84,10 @@ __END__
          return 503 if -e '/path/to/app/maintenance.lock';
 
          return [200, [qw(Content-Type text/plain)], ['You found it!']]
-            if $_ eq '/easter-egg';
+             if $_ eq '/easter-egg';
+
+         return [ 302, [ Location => 'http://some.otherhost.com/correct' ], [] ]
+             if m{^/psgi-redirect};
 
          return sub { $_->set( 'Content-Type', 'application/xhtml+xml' ) }
              if $_[0]{'HTTP_ACCEPT'} =~ m{application/xhtml\+xml(?!\s*;\s*q=0)}
@@ -154,3 +157,14 @@ your rules:
 =back
 
 =back
+
+=head2 Redirecting to a new host
+
+You should note that returning a scalar value will only modify C<PATH_INFO>, so
+you won't be able to use this to redirect to another host entirely.  If you
+want an external redirect to a new host you'll need to use an array reference
+or a code reference and ensure that you add a C<Location> header.  For example,
+the array reference might look something like this:
+
+    return [ 302, [ Location => 'http://some.otherhost.com/correct' ], [] ]
+        if m{^/psgi-redirect};
