@@ -75,16 +75,19 @@ __END__
      enable 'Rewrite', rules => sub {
          s{^/here(?=/|$)}{/there};
 
-         return 301
+         return 303
              if s{^/foo/?$}{/bar/}
              or s{^/baz/?$}{/quux/};
+
+         return [301, [ Location => 'http://example.org/' ], []]
+             if m{^/example/?$};
 
          return 201 if $_ eq '/favicon.ico';
 
          return 503 if -e '/path/to/app/maintenance.lock';
 
          return [200, [qw(Content-Type text/plain)], ['You found it!']]
-            if $_ eq '/easter-egg';
+             if $_ eq '/easter-egg';
 
          return sub { $_->set( 'Content-Type', 'application/xhtml+xml' ) }
              if $_[0]{'HTTP_ACCEPT'} =~ m{application/xhtml\+xml(?!\s*;\s*q=0)}
@@ -125,6 +128,10 @@ C<RewriteRule>s that do not redirect.
 This will stop the request from being processed further. An empty response with
 the returned status will be sent to the browser. If it is a redirect status,
 then the rewritten C<PATH_INFO> will be used as the redirect destination.
+
+Note that this means you can only redirect to other URLs on the same domain.
+To redirect to another host entirely, you will need to supply a C<Location>
+header manually, which requires returning either an array or code reference.
 
 =item An array reference
 
