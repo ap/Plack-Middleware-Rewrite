@@ -1,10 +1,12 @@
-package Plack::Middleware::Rewrite;
 use strict;
-use parent qw( Plack::Middleware );
+
+package Plack::Middleware::Rewrite;
 
 # ABSTRACT: mod_rewrite for Plack
 
-use Plack::Util::Accessor qw( rules );
+use parent 'Plack::Middleware';
+
+use Plack::Util::Accessor 'rules';
 use Plack::Request ();
 use Plack::Util ();
 
