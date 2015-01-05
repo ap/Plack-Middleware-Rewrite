@@ -1,8 +1,9 @@
 use strict;
-no warnings;
+use warnings;
+
 use Plack::Test;
 use Plack::Builder;
-use Test::More;
+use Test::More 0.88; # for done_testing
 use HTTP::Request::Common;
 
 my $did_run;
