@@ -1,5 +1,10 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.010 Fri 09 Jan 2015
+	- No functional changes
+	- Test suite cleanup
+	- Minimum Perl requirement declared
+
 1.009 Fri 02 Jan 2015
 	- Explicit documentation of how to redirect to a different host (OALDERS)
 
