@@ -12,8 +12,6 @@ use Plack::Util::Accessor 'rules';
 use Plack::Request ();
 use Plack::Util ();
 
-my %is_redir = map {; $_ => 1 } qw( 301 302 303 307 );
-
 sub call {
 	my $self = shift;
 	my ( $env ) = @_;
