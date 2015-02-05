@@ -34,6 +34,9 @@ $app = builder {
 		return 303
 			if s{^/fate/?$}{/tempted<'&">badly/};
 
+		return []
+			if m{^/empty-array};
+
 		s{^/baz$}{/quux};
 	};
 	$app;
@@ -100,6 +103,10 @@ test_psgi app => $app, client => sub {
 	$req = GET 'http://localhost/nobody';
 	$res = $run->( $req );
 	ok !$res->content, '... and can eschew the auto-generated body';
+
+	$req = GET 'http://localhost/empty-array';
+	$res = $run->( $req );
+	is $res->content, '/empty-array', '... but must contain *some*thing in order to be recognized';
 
 	$req = GET 'http://localhost/', Accept => $xhtml;
 	$res = $run->( $req );
