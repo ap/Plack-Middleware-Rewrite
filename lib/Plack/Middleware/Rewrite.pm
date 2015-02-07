@@ -54,7 +54,8 @@ sub call {
 
 	return $res if not $modify_cb;
 	Plack::Util::response_cb( $res, sub {
-		$modify_cb->( $env ) for Plack::Util::headers( $_[0][1] );
+		my ( $res ) = map { $modify_cb->( $env ) } Plack::Util::headers( $_[0][1] );
+		return $res if 'CODE' eq ref $res;
 		return;
 	} );
 }
@@ -143,7 +144,31 @@ with C<$_> aliased to a L<C<Plack::Util::headers>|Plack::Util> object for the
 response, for convenient alteration of headers. The L<PSGI> environment is,
 again, passed as its first and only argument.
 
-Any return value from this function will be ignored.
+Any return value from this function will be ignored E<mdash>
+
+E<hellip> except if this function returns a function in turn. In that case, the
+function returned will be taken to be a filter for the body of the response
+about to be generated, with the interface documented in
+L<Plack::Middleware/RESPONSE CALLBACK>:
+
+=over 4
+
+ return sub {
+     my $res = shift;
+     return sub {
+         my $chunk = shift;
+         return unless defined $chunk;
+         $chunk =~ s/Foo/Bar/g;
+         return $chunk;
+     }
+ };
+
+The callback takes one argument C<$chunk> and your callback is expected to
+return the updated chunk. If the given C<$chunk> is undef, it means the stream
+has reached the end, so your callback should also return undef, or return the
+final chunk and return undef when called next time.
+
+=back
 
 =item Any other kind of value
 

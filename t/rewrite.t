@@ -46,8 +46,11 @@ $app = builder {
 		return sub { +{ a => 1, b => 2 } }
 			if m{^/sub-hash};
 
-		return sub { sub { s/sub-code//g for $_[0] || return undef; $_[0] } }
-			if m{^/sub-code};
+		return sub { sub {
+			my $copy = $_[0];
+			defined and s{((blah)+)}{ $2 . " x " . ( ( length $1 ) / ( length $2 ) ) }e for $copy;
+			return $copy;
+		} } if m{^/sub-code};
 
 		s{^/baz$}{/quux};
 	};
@@ -127,6 +130,10 @@ test_psgi app => $app, client => sub {
 	ok !$res->header( 'Location' ), '... and inserts no Location header';
 	is $res->header( 'Content-Type' ), $xhtml, '... but affects the desired headers';
 
+	$req = GET 'http://localhost/sub-code/' . ( 'blah' x 8 );
+	$res = $run->( $req );
+	is $res->content, '/sub-code/blah x 8', '... and can modify the body if intended';
+
 	$req = GET 'http://localhost/', Accept => "$xhtml;q=0";
 	$res = $run->( $req );
 	is $res->header( 'Content-Type' ), 'text/plain', '... triggering only as requested';
@@ -154,14 +161,6 @@ test_psgi app => $app, client => sub {
 		&& !$res->header( 'Location' )
 		&& $res->content eq '/sub-hash',
 		'... or hashes';
-
-	$req = GET 'http://localhost/sub-code';
-	$res = $run->( $req );
-	ok $res->code eq 200
-		&& $res->header( 'Content-Type' ) eq 'text/plain'
-		&& !$res->header( 'Location' )
-		&& $res->content eq '/sub-code',
-		'... or functions';
 };
 
 test_psgi app => builder {
