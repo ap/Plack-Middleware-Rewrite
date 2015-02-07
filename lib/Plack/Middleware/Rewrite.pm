@@ -21,40 +21,36 @@ sub call {
 	# call rules with $_ aliased to PATH_INFO
 	my ( $res ) = map { $self->rules->( $env ) } $env->{'PATH_INFO'};
 
-	# return value fixup
-	if ( 'CODE' eq ref $res ) {
-		$modify_cb = $res;
-		undef $res;
-	}
-	elsif ( 'ARRAY' eq ref $res and @$res ) {
+	# upgrade scalar return value, but only if it looks like an HTTP status
+	$res = [ $res, [], [] ]
+		if not ref $res
+		and defined $res
+		and $res =~ /\A[1-5][0-9][0-9]\z/;
+
+	if ( 'ARRAY' eq ref $res and @$res ) { # external redirect, or explicit response
 		push @$res, [] if @$res < 2;
 		push @$res, [] if @$res < 3;
-	}
-	elsif ( not ref $res and defined $res and $res =~ /\A[1-5][0-9][0-9]\z/ ) {
-		$res = [ $res, [], [] ];
-	}
-	else {
-		undef $res;
-	}
 
-	if ( not $res ) { # redirect was internal
+		if ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
+			my $dest = Plack::Util::header_get( $res->[1], 'Location' );
+			if ( not $dest ) {
+				$dest = Plack::Request->new( $env )->uri;
+				Plack::Util::header_set( $res->[1], Location => $dest );
+			}
+
+			if ( 304 ne $res->[0] and not (
+				Plack::Util::content_length( $res->[2] )
+				or Plack::Util::header_exists( $res->[1], 'Content-Length' )
+			) ) {
+				my $href = Plack::Util::encode_html( $dest );
+				Plack::Util::header_set( $res->[1], qw( Content-Type text/html ) );
+				$res->[2] = [ qq'<!DOCTYPE html><title>Moved</title>This resource has moved to <a href="$href">a new address</a>.' ];
+			}
+		}
+	}
+	else { # internal redirect
+		$modify_cb = $res if 'CODE' eq ref $res;
 		$res = $self->app->( $env );
-	}
-	elsif ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
-		my $dest = Plack::Util::header_get( $res->[1], 'Location' );
-		if ( not $dest ) {
-			$dest = Plack::Request->new( $env )->uri;
-			Plack::Util::header_set( $res->[1], Location => $dest );
-		}
-
-		if ( 304 ne $res->[0] and not (
-			Plack::Util::content_length( $res->[2] )
-			or Plack::Util::header_exists( $res->[1], 'Content-Length' )
-		) ) {
-			my $href = Plack::Util::encode_html( $dest );
-			Plack::Util::header_set( $res->[1], qw( Content-Type text/html ) );
-			$res->[2] = [ qq'<!DOCTYPE html><title>Moved</title>This resource has moved to <a href="$href">a new address</a>.' ];
-		}
 	}
 
 	return $res if not $modify_cb;
