@@ -16,10 +16,11 @@ sub call {
 	my $self = shift;
 	my ( $env ) = @_;
 
-	my $modify_cb;
+	my ( $app, $res ) = $self->app;
+	my ( $rules, $modify_cb ) = $self->rules;
 
 	# call rules with $_ aliased to PATH_INFO
-	my ( $res ) = map { $self->rules->( $env ) } $env->{'PATH_INFO'};
+	( $res ) = map { $rules->( $env ) } $env->{'PATH_INFO'};
 
 	# upgrade scalar return value, but only if it looks like an HTTP status
 	$res = [ $res, [], [] ]
@@ -49,7 +50,7 @@ sub call {
 	}
 	else { # internal redirect
 		$modify_cb = $res if 'CODE' eq ref $res;
-		$res = $self->app->( $env );
+		$res = $app->( $env );
 	}
 
 	return $res if not $modify_cb;
