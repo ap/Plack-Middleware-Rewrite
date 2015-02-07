@@ -11,6 +11,17 @@ use Plack::Request ();
 use Plack::Util ();
 use overload ();
 
+my $header_class = do {
+	package # hide from PAUSE
+		Plack::Util::PlackMiddlewareRewriteHeaders;
+	*get    = \&Plack::Util::header_get;
+	*set    = \&Plack::Util::header_set;
+	*remove = \&Plack::Util::header_remove;
+	*exists = \&Plack::Util::header_exists;
+	*iter   = \&Plack::Util::header_iter;
+	__PACKAGE__
+};
+
 sub call {
 	my $self = shift;
 	my ( $env ) = @_;
@@ -73,7 +84,7 @@ sub call {
 	return $res if not $modify_cb;
 	Plack::Util::response_cb( $res, sub {
 		my $response = $_[0];
-		my $hdrs = Plack::Util::headers( $response->[1] );
+		my $hdrs = bless $response->[1], $header_class;
 		$hdrs->{'status'} = sub { @_ ? $response->[0] = $_[0] : $response->[0] };
 		my ( $result ) = map $modify_cb->( $env ), $hdrs;
 		return 'CODE' eq ref $result ? $result : ();
