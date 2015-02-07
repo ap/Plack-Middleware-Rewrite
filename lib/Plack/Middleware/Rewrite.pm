@@ -28,8 +28,7 @@ sub call {
 		and $res =~ /\A[1-5][0-9][0-9]\z/;
 
 	if ( 'ARRAY' eq ref $res and @$res ) { # external redirect, or explicit response
-		push @$res, [] if @$res < 2;
-		push @$res, [] if @$res < 3;
+		push @$res, map { [] } @$res .. 2;
 
 		if ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
 			my $dest = Plack::Util::header_get( $res->[1], 'Location' );
