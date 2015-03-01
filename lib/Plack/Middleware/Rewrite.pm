@@ -143,6 +143,8 @@ with C<$_> aliased to a L<C<Plack::Util::headers>|Plack::Util> object for the
 response, for convenient alteration of headers. The L<PSGI> environment is,
 again, passed as its first and only argument.
 
+Any return value from this function will be ignored.
+
 =item Any other kind of value
 
 Other values are currently treated the same as returning nothing. This may

@@ -37,6 +37,18 @@ $app = builder {
 		return []
 			if m{^/empty-array};
 
+		return sub { 1234567890 }
+			if m{^/sub=scalar};
+
+		return sub { [1,2,3] }
+			if m{^/sub=array};
+
+		return sub { +{ a => 1, b => 2 } }
+			if m{^/sub-hash};
+
+		return sub { sub { s/sub-code//g for $_[0] || return undef; $_[0] } }
+			if m{^/sub-code};
+
 		s{^/baz$}{/quux};
 	};
 	$app;
@@ -117,7 +129,39 @@ test_psgi app => $app, client => sub {
 
 	$req = GET 'http://localhost/', Accept => "$xhtml;q=0";
 	$res = $run->( $req );
-	is $res->header( 'Content-Type' ), 'text/plain', '... and triggers only as requested';
+	is $res->header( 'Content-Type' ), 'text/plain', '... triggering only as requested';
+
+	$req = GET 'http://localhost/sub-scalar';
+	$res = $run->( $req );
+	ok $res->code eq 200
+		&& $res->header( 'Content-Type' ) eq 'text/plain'
+		&& !$res->header( 'Location' )
+		&& $res->content eq '/sub-scalar',
+		'... and ignoring irrelevant return values, be they scalars';
+
+	$req = GET 'http://localhost/sub-array';
+	$res = $run->( $req );
+	ok $res->code eq 200
+		&& $res->header( 'Content-Type' ) eq 'text/plain'
+		&& !$res->header( 'Location' )
+		&& $res->content eq '/sub-array',
+		'... or arrays';
+
+	$req = GET 'http://localhost/sub-hash';
+	$res = $run->( $req );
+	ok $res->code eq 200
+		&& $res->header( 'Content-Type' ) eq 'text/plain'
+		&& !$res->header( 'Location' )
+		&& $res->content eq '/sub-hash',
+		'... or hashes';
+
+	$req = GET 'http://localhost/sub-code';
+	$res = $run->( $req );
+	ok $res->code eq 200
+		&& $res->header( 'Content-Type' ) eq 'text/plain'
+		&& !$res->header( 'Location' )
+		&& $res->content eq '/sub-code',
+		'... or functions';
 };
 
 test_psgi app => builder {
