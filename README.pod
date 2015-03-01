@@ -8,7 +8,7 @@ Plack::Middleware::Rewrite - mod_rewrite for Plack
 
 =head1 VERSION
 
-version 1.010
+version 1.100
 
 =head1 SYNOPSIS
 
