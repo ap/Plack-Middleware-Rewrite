@@ -23,7 +23,7 @@ $app = builder {
 			if $_ eq '/die';
 
 		return sub { $_->set( 'Content-Type', $xhtml ) }
-			if $_[0]{'HTTP_ACCEPT'} =~ m{application/xhtml\+xml(?!\s*;\s*q=0)};
+			if ( $_[0]{'HTTP_ACCEPT'} || '' ) =~ m{application/xhtml\+xml(?!\s*;\s*q=0)};
 
 		return [ 302, [ Location => 'http://localhost/correct' ], [] ]
 			if m{^/psgi-redirect};

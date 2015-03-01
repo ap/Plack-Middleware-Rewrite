@@ -87,7 +87,7 @@ __END__
              if $_ eq '/easter-egg';
 
          return sub { $_->set( 'Content-Type', 'application/xhtml+xml' ) }
-             if $_[0]{'HTTP_ACCEPT'} =~ m{application/xhtml\+xml(?!\s*;\s*q=0)}
+             if ( $_[0]{'HTTP_ACCEPT'} || '' ) =~ m{application/xhtml\+xml(?!\s*;\s*q=0)}
      };
      $app;
  };
