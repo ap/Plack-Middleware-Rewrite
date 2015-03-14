@@ -37,20 +37,16 @@ $app = builder {
 		return []
 			if m{^/empty-array};
 
-		return sub { 1234567890 }
-			if m{^/sub-scalar};
-
-		return sub { [1,2,3] }
-			if m{^/sub-array};
-
-		return sub { +{ a => 1, b => 2 } }
-			if m{^/sub-hash};
-
-		return sub { sub {
-			my $copy = $_[0];
-			defined and s{((blah)+)}{ $2 . " x " . ( ( length $1 ) / ( length $2 ) ) }e for $copy;
-			return $copy;
-		} } if m{^/sub-code};
+		for ( $_[0]{'QUERY_STRING'} || () ) {
+			return sub { 1234567890 }          if 'SCALAR' eq $_;
+			return sub { [1,2,3] }             if  'ARRAY' eq $_;
+			return sub { +{ a => 1, b => 2 } } if   'HASH' eq $_;
+			return sub { sub {
+				my $copy = $_[0];
+				defined and s{((blah)+)}{ $2 . " x " . ( ( length $1 ) / ( length $2 ) ) }e for $copy;
+				return $copy;
+			} } if 'CODE' eq $_;
+		}
 
 		s{^/baz$}{/quux};
 	};
@@ -130,36 +126,36 @@ test_psgi app => $app, client => sub {
 	ok !$res->header( 'Location' ), '... and inserts no Location header';
 	is $res->header( 'Content-Type' ), $xhtml, '... but affects the desired headers';
 
-	$req = GET 'http://localhost/sub-code/' . ( 'blah' x 8 );
+	$req = GET 'http://localhost/' . ( 'blah' x 8 ) . '?CODE';
 	$res = $run->( $req );
-	is $res->content, '/sub-code/blah x 8', '... and can modify the body if intended';
+	is $res->content, '/blah x 8', '... and can modify the body if intended';
 
 	$req = GET 'http://localhost/', Accept => "$xhtml;q=0";
 	$res = $run->( $req );
 	is $res->header( 'Content-Type' ), 'text/plain', '... triggering only as requested';
 
-	$req = GET 'http://localhost/sub-scalar';
+	$req = GET 'http://localhost/?SCALAR';
 	$res = $run->( $req );
 	ok $res->code eq 200
 		&& $res->header( 'Content-Type' ) eq 'text/plain'
 		&& !$res->header( 'Location' )
-		&& $res->content eq '/sub-scalar',
+		&& $res->content eq '/',
 		'... and ignoring irrelevant return values, be they scalars';
 
-	$req = GET 'http://localhost/sub-array';
+	$req = GET 'http://localhost/?ARRAY';
 	$res = $run->( $req );
 	ok $res->code eq 200
 		&& $res->header( 'Content-Type' ) eq 'text/plain'
 		&& !$res->header( 'Location' )
-		&& $res->content eq '/sub-array',
+		&& $res->content eq '/',
 		'... or arrays';
 
-	$req = GET 'http://localhost/sub-hash';
+	$req = GET 'http://localhost/?HASH';
 	$res = $run->( $req );
 	ok $res->code eq 200
 		&& $res->header( 'Content-Type' ) eq 'text/plain'
 		&& !$res->header( 'Location' )
-		&& $res->content eq '/sub-hash',
+		&& $res->content eq '/',
 		'... or hashes';
 };
 
