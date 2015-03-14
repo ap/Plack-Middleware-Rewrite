@@ -38,10 +38,10 @@ $app = builder {
 			if m{^/empty-array};
 
 		return sub { 1234567890 }
-			if m{^/sub=scalar};
+			if m{^/sub-scalar};
 
 		return sub { [1,2,3] }
-			if m{^/sub=array};
+			if m{^/sub-array};
 
 		return sub { +{ a => 1, b => 2 } }
 			if m{^/sub-hash};
