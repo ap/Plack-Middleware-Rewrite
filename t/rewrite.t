@@ -121,7 +121,7 @@ test_psgi app => $app, client => sub {
 
 	$req = GET 'http://localhost/empty-array';
 	$res = $run->( $req );
-	is $res->content, '/empty-array', '... but must contain *some*thing in order to be recognized';
+	is $did_run, 1, '... but must contain *some*thing in order to be recognized';
 
 	$req = GET 'http://localhost/', Accept => $xhtml;
 	$res = $run->( $req );
