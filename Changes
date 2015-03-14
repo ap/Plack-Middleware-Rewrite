@@ -1,5 +1,9 @@
 Revision history for Plack-Middleware-Rewrite
 
+1.101 Sat 14 Mar 2015
+	- No functional changes
+	- Test suite fixes and refactoring
+
 1.100 Sun 01 Mar 2015
 	- Response body filter support
 
