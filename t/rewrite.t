@@ -54,8 +54,8 @@ $app = builder {
 };
 
 test_psgi app => $app, client => sub {
-	my $cb = shift;
-	my $cb = sub { $did_run = 0; &$cb };
+	my $_cb = shift;
+	my $cb = sub { $did_run = 0; &$_cb };
 
 	my $res;
 
