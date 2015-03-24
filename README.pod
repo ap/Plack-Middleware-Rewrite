@@ -53,19 +53,19 @@ almost anything is possible very easily.
 
 =item rules
 
-C<rules> takes a reference to a function that will be called on each request.
-When it is, the C<PATH_INFO> is aliased to C<$_>, so that you can easily use
-regexp matches and subtitutions to examine and modify it. The L<PSGI>
-environment will be passed as its first and only argument. The function can
-return four (and a half) kinds of values:
+C<rules> takes a reference to a function that will be called in scalar context
+for each request. During the call, C<PATH_INFO> is aliased to C<$_>, so that
+you can easily use regexp matches and subtitutions to examine and modify it.
+The L<PSGI> environment will be passed as its first and only argument. The
+function can return four (and a half) kinds of values:
 
 =over 4
 
-=item Nothing or C<undef>
+=item C<undef>
 
-In that case, any path and query string rewriting will be treated as an
-internal rewrite, invisible to the user. This is just like having
-C<RewriteRule>s that do not redirect.
+Any path and query string rewriting will be treated as an internal rewrite,
+invisible to the user. This is just like having C<RewriteRule>s that do not
+redirect.
 
 =item A scalar value that looks like an HTTP status
 
@@ -77,11 +77,11 @@ Note that this means you can only redirect to other URLs on the same domain.
 To redirect to another host entirely, you will need to supply a C<Location>
 header manually, which requires returning either an array or code reference.
 
-=item An array reference
+=item An array reference (with at least one element)
 
 This is assumed to be a regular L<PSGI> response, except that you may omit
 either or both the headers and body elements. Empty ones will be supplied for
-you, for convenience.
+you, for convenience. You I<may not> omit the status code.
 
 =item A code reference
 
@@ -127,8 +127,6 @@ your rules:
  return [201] if $_ eq '/favicon.ico';
  s{^/here(?=/|$)}{/there};
  return;
-
-=back
 
 =back
 
