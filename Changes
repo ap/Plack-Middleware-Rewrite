@@ -1,5 +1,11 @@
 Revision history for Plack-Middleware-Rewrite
 
+2.000 Thu 14 May 2015
+	- New interface with separate `request`/`response` rewrite callbacks,
+	  with unambiguous return value protocol, which supports redirecting
+	  to different PSGI apps
+	- Full legacy interface support for `rules` callback
+
 1.101 Sat 14 Mar 2015
 	- No functional changes
 	- Test suite fixes and refactoring
