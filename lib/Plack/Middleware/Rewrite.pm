@@ -84,6 +84,8 @@ sub call {
 
 __END__
 
+=pod
+
 =head1 SYNOPSIS
 
  # in app.psgi
