@@ -3,7 +3,7 @@ use warnings;
 
 use Plack::Test;
 use Plack::Builder;
-use Test::More 0.88; # for done_testing
+use Test::More tests => 9;
 use HTTP::Request::Common;
 
 my $content = 'blah' x 8;
@@ -68,5 +68,3 @@ test_psgi app => $app, client => sub {
 		&& $res->content eq $content,
 		'... or hashes';
 };
-
-done_testing;

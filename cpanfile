@@ -14,7 +14,7 @@ on test => sub {
 	requires 'HTTP::Request::Common';
 	requires 'Plack::Builder';
 	requires 'Plack::Test';
-	requires 'Test::More', '0.88';
+	requires 'Test::More';
 };
 
 # vim: ft=perl

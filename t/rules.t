@@ -3,7 +3,7 @@ use warnings;
 
 use Plack::Test;
 use Plack::Builder;
-use Test::More 0.88; # for done_testing
+use Test::More tests => 34;
 use HTTP::Request::Common;
 
 my $did_run;
@@ -149,5 +149,3 @@ test_psgi app => builder {
 	my $res = $cb->( GET 'http://localhost/' );
 	ok !$res->content, 'Redirects from the wrapped app are passed through untouched';
 };
-
-done_testing;
