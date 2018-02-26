@@ -74,9 +74,11 @@ sub call {
 
 	return $res if not $modify_cb;
 	Plack::Util::response_cb( $res, sub {
-		my ( $res ) = map { $modify_cb->( $env ) } Plack::Util::headers( $_[0][1] );
-		return $res if 'CODE' eq ref $res;
-		return;
+		my $response = $_[0];
+		my $hdrs = Plack::Util::headers( $response->[1] );
+		$hdrs->{'status'} = sub { @_ ? $response->[0] = $_[0] : $response->[0] };
+		my ( $result ) = map $modify_cb->( $env ), $hdrs;
+		return 'CODE' eq ref $result ? $result : ();
 	} );
 }
 
@@ -109,6 +111,9 @@ __END__
          return [200, [qw(Content-Type text/plain)], ['You found it!']]
              if $_ eq '/easter-egg';
      }, response => sub {
+         $_->status( 303 )
+             if $_->status eq 201 and $_->get( 'Location' );
+
          $_->set( 'Content-Type', 'application/xhtml+xml' )
              if ( $_[0]{'HTTP_ACCEPT'} || '' ) =~ m{application/xhtml\+xml(?!\s*;\s*q=0)};
      };
@@ -173,9 +178,14 @@ Error. An exception will be thrown.
 Takes a reference to a function that will be called I<after> the request has
 been processed and the response is ready to be returned.
 
-On call, C<$_> will be aliased to a L<C<Plack::Util::headers>|Plack::Util>
-object for the response, for convenient alteration of headers. Just as in
-L</C<request>>, the L<PSGI> environment is passed as first and only argument.
+On call, C<$_> will be aliased to a specially extended
+a L<C<Plack::Util::headers>|Plack::Util/headers> object for the response, for
+convenient alteration of headers.
+The extension is a C<status> method, which allows you to inspect and modify the
+response status code.
+
+Just as in L</C<request>>, the L<PSGI> environment is passed as first and only
+argument.
 
 Any return value from this function will be ignored unless it is a code
 reference. In that case it will be used to filter the response body, as
