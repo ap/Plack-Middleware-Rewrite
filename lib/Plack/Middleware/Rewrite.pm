@@ -110,7 +110,8 @@ __END__
 
          return [200, [qw(Content-Type text/plain)], ['You found it!']]
              if $_ eq '/easter-egg';
-     }, response => sub {
+     },
+     response => sub {
          $_->status( 303 )
              if $_->status eq 201 and $_->get( 'Location' );
 
