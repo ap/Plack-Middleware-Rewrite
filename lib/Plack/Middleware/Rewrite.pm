@@ -50,17 +50,17 @@ sub call {
 	if ( $res ) { # external redirect, or explicit response
 		push @$res, map { [] } @$res .. 2;
 
-		if ( $res->[0] =~ /\A3[0-9][0-9]\z/ ) {
+		if ( $res->[0] =~ /\A3(?:0[0-35-9]|[1-9][0-9])\z/ ) {
 			my $dest = Plack::Util::header_get( $res->[1], 'Location' );
 			if ( not $dest ) {
 				$dest = Plack::Request->new( $env )->uri;
 				Plack::Util::header_set( $res->[1], Location => $dest );
 			}
 
-			if ( 304 ne $res->[0] and not (
+			unless (
 				Plack::Util::content_length( $res->[2] )
 				or Plack::Util::header_exists( $res->[1], 'Content-Length' )
-			) ) {
+			) {
 				my $href = Plack::Util::encode_html( $dest );
 				Plack::Util::header_set( $res->[1], qw( Content-Type text/html ) );
 				$res->[2] = [ qq'<!DOCTYPE html><title>Moved</title>This resource has moved to <a href="$href">a new address</a>.' ];

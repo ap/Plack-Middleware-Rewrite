@@ -3,7 +3,7 @@ use warnings;
 
 use Plack::Test;
 use Plack::Builder;
-use Test::More tests => 25;
+use Test::More tests => 27;
 use HTTP::Request::Common;
 
 my $did_run;
@@ -30,6 +30,9 @@ $app = builder {
 
 		return [303]
 			if s{^/fate/?$}{/tempted<'&">badly/};
+
+		return [304]
+			if m{^/never-modified};
 
 		return []
 			if m{^/empty-array};
@@ -92,6 +95,10 @@ test_psgi app => $app, client => sub {
 
 	$res = $cb->( GET 'http://localhost/empty-array' );
 	is $did_run, 0, '... but must contain *some*thing in order to be recognized';
+
+	$res = $cb->( GET 'http://localhost/never-modified' );
+	ok !$res->header( 'Location' ), '304 responses are not treated as redirects';
+	ok !$res->content, '... and the body is left alone';
 };
 
 test_psgi app => builder {
