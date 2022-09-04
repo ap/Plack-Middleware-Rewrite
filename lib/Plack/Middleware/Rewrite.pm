@@ -6,7 +6,7 @@ package Plack::Middleware::Rewrite;
 
 # ABSTRACT: mod_rewrite for Plack
 
-use parent 'Plack::Middleware';
+BEGIN { require Plack::Middleware; our @ISA = 'Plack::Middleware' }
 
 use Plack::Util::Accessor qw( request response rules );
 use Plack::Request ();
