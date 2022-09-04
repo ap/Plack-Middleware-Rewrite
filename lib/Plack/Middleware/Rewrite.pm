@@ -2,7 +2,7 @@ use 5.006; use strict; use warnings;
 
 package Plack::Middleware::Rewrite;
 
-our $VERSION = '2.101';
+our $VERSION = '2.102';
 
 BEGIN { require Plack::Middleware; our @ISA = 'Plack::Middleware' }
 
