@@ -2,7 +2,7 @@ use 5.006; use strict; use warnings;
 
 package Plack::Middleware::Rewrite;
 
-# ABSTRACT: mod_rewrite for Plack
+our $VERSION = '2.101';
 
 BEGIN { require Plack::Middleware; our @ISA = 'Plack::Middleware' }
 
@@ -85,6 +85,12 @@ sub call {
 __END__
 
 =pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Plack::Middleware::Rewrite - mod_rewrite for Plack
 
 =head1 SYNOPSIS
 
@@ -271,3 +277,5 @@ code is rare, and in all other cases your code will be more readable under
 the new interface.
 
 =back
+
+=cut
